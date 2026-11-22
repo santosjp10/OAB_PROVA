@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vade — Estudo para a OAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F5F1E6;
+    --paper-raised: #FBF9F3;
+    --line: #DCD4BE;
+    --line-strong: #C7BC9E;
+    --ink: #1B2430;
+    --ink-soft: #565F72;
+    --ink-faint: #8A8F7E;
+    --brass: #8C6A34;
+    --brass-deep: #6F5326;
+    --correct: #33513C;
+    --correct-bg: #E4EBDF;
+    --wrong: #7A2F27;
+    --wrong-bg: #F1E1DA;
+    --radius: 3px;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  a{color: var(--brass-deep);}
+
+  /* ---------- layout shell ---------- */
+  .shell{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+  header.top{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header.top h1{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header.top .sub{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  header.top .stats{
+    text-align:right;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  header.top .stats b{
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* ---------- index / filters ---------- */
+  .index{
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+  .index-title{
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0 0 10px 0;
+  }
+  .disc-list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px 0;
+  }
+  .disc-list li{
+    display: inline-block;
+  }
+  .disc-chip{
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 5px 11px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .disc-chip:hover{ border-color: var(--brass); color: var(--ink); }
+  .disc-chip.active{
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper-raised);
+  }
+  .index-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .toggle-label{
+    font-size: 13px;
+    color: var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap: 7px;
+    cursor: pointer;
+    user-select:none;
+  }
+  .toggle-label input{ accent-color: var(--brass); }
+  .btn{
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper-raised);
+    cursor: pointer;
+  }
+  .btn.ghost{
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line-strong);
+    font-weight: 500;
+  }
+  .btn.ghost:hover{ border-color: var(--ink); }
+  .btn:disabled{ opacity: 0.4; cursor: default; }
+
+  /* ---------- question card ---------- */
+  .card{
+    border: 1px solid var(--line-strong);
+    background: var(--paper-raised);
+    border-radius: var(--radius);
+    padding: 30px 30px 26px;
+  }
+  .q-meta{
+    display:flex;
+    justify-content: space-between;
+    align-items:baseline;
+    margin-bottom: 16px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .q-meta .disc-name{
+    color: var(--brass-deep);
+    font-weight: 600;
+  }
+  .enunciado{
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0 0 22px 0;
+    white-space: pre-line;
+  }
+  .alts{
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    counter-reset: alt;
+  }
+  .alt{
+    display: flex;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .alt:hover{ border-color: var(--brass); }
+  .alt .letter{
+    font-family: var(--serif);
+    font-weight: 600;
+    color: var(--brass-deep);
+    flex-shrink: 0;
+  }
+  .alt.selected{
+    border-color: var(--ink);
+    background: #EFEBDD;
+  }
+  .alt.correct{
+    border-color: var(--correct);
+    background: var(--correct-bg);
+  }
+  .alt.correct .letter{ color: var(--correct); }
+  .alt.wrong{
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+  }
+  .alt.wrong .letter{ color: var(--wrong); }
+  .alt.disabled{ cursor: default; }
+
+  .feedback{
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    margin-top: 6px;
+    display: none;
+  }
+  .feedback.show{ display:block; }
+  .feedback .verdict{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .feedback .verdict.ok{ color: var(--correct); }
+  .feedback .verdict.no{ color: var(--wrong); }
+  .feedback .expl{
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .feedback .base{
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .card-actions{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .progress{
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .progress b{ color: var(--ink); }
+
+  .empty-state{
+    text-align:center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state h2{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--ink);
+  }
+
+  /* ---------- import / export panel ---------- */
+  details.data-panel{
+    margin-top: 28px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+  }
+  details.data-panel summary{
+    cursor: pointer;
+    padding: 14px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    list-style: none;
+  }
+  details.data-panel summary::-webkit-details-marker{ display:none; }
+  details.data-panel summary:before{
+    content: "＋ ";
+    color: var(--brass);
+  }
+  details.data-panel[open] summary:before{
+    content: "－ ";
+  }
+  .data-panel-body{
+    padding: 4px 20px 22px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .data-panel-body code{
+    background: #EFEAD8;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 12.5px;
+  }
+  .data-panel-body textarea{
+    width: 100%;
+    min-height: 110px;
+    font-family: monospace;
+    font-size: 12.5px;
+    padding: 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    margin: 10px 0;
+    resize: vertical;
+  }
+  .data-panel-actions{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .data-msg{
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+  .data-msg.ok{ color: var(--correct); }
+  .data-msg.err{ color: var(--wrong); }
+
+  footer.note{
+    text-align:center;
+    margin-top: 30px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 560px){
+    .shell{ padding: 24px 16px 80px; }
+    header.top h1{ font-size: 24px; }
+    .card{ padding: 22px 18px; }
+    .enunciado{ font-size: 16.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <div>
+      <h1>Vade</h1>
+      <div class="sub">Questões comentadas de exames anteriores da OAB</div>
+    </div>
+    <div class="stats">
+      <b id="statTotal">0</b> questões no banco<br>
+      <span id="statScore">0 respondidas nesta sessão</span>
+    </div>
+  </header>
+
+  <div class="index">
+    <p class="index-title">Disciplinas</p>
+    <ul class="disc-list" id="discList"></ul>
+    <div class="index-row">
+      <label class="toggle-label">
+        <input type="checkbox" id="onlyUnanswered">
+        Somente questões ainda não respondidas nesta sessão
+      </label>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ghost" id="shuffleBtn">Embaralhar</button>
+        <button class="btn ghost" id="resetSessionBtn">Reiniciar sessão</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizArea"></div>
+
+  <details class="data-panel">
+    <summary>Adicionar ou exportar questões</summary>
+    <div class="data-panel-body">
+      <p>O banco inicial traz questões reais do 46º Exame de Ordem (maio de 2026), com base legal conferida. Para crescer o banco com mais provas — do <a href="https://examedeordem.oab.org.br" target="_blank" rel="noopener">site oficial do Exame de Ordem</a> ou de qualquer outra fonte — cole abaixo dados em <strong>CSV</strong> ou <strong>JSON</strong> (o formato é detectado automaticamente).</p>
+      <p><strong>CSV</strong> — ideal para editar em Excel/Google Sheets. Colunas, nesta ordem, com cabeçalho na primeira linha:<br>
+      <code>disciplina,exame,enunciado,alt_a,alt_b,alt_c,alt_d,correta,explicacao,baseLegal</code><br>
+      Use aspas duplas ao redor de qualquer campo que tenha vírgula. <code>correta</code> deve ser a, b, c ou d.</p>
+      <p><strong>JSON</strong> — melhor quando o lote é gerado por mim ou por outra ferramenta:<br>
+      <code>[{"disciplina":"Ética Profissional","exame":"45º Exame","enunciado":"...","alternativas":{"a":"...","b":"...","c":"...","d":"..."},"correta":"a","explicacao":"...","baseLegal":"Art. X do Estatuto"}]</code></p>
+      <textarea id="importBox" placeholder="Cole aqui questões em CSV ou JSON..."></textarea>
+      <div class="data-panel-actions">
+        <button class="btn ghost" id="importBtn">Importar para esta sessão</button>
+        <label class="btn ghost" style="cursor:pointer;">
+          Importar arquivo .csv ou .json
+          <input type="file" id="importFile" accept=".json,.csv" style="display:none;">
+        </label>
+        <button class="btn ghost" id="exportBtn">Baixar banco completo (JSON)</button>
+        <button class="btn ghost" id="exportCsvBtn">Baixar banco completo (CSV)</button>
+      </div>
+      <div class="data-msg" id="dataMsg"></div>
+      <p style="margin-top:14px;">Como esta é uma página independente, nada fica salvo automaticamente entre sessões. Depois de importar novas questões, baixe o banco completo (no formato que preferir) e reabra esse arquivo na próxima sessão de estudo, no lugar deste, para não perder nada.</p>
+    </div>
+  </details>
+
+  <footer class="note">
+    Ferramenta independente de estudo, sem vínculo com a OAB ou a FGV.<br>
+    As questões e gabaritos oficiais estão sempre disponíveis em examedeordem.oab.org.br.
+  </footer>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   BANCO INICIAL — questões reais do 46º Exame de Ordem Unificado
+   (1ª fase, aplicada em 03/05/2026), com gabarito oficial da FGV.
+   Explicações e referência de artigo escritas de forma resumida
+   e autoral para fins de estudo.
+------------------------------------------------------------------*/
+const SEED_QUESTIONS = [
+{disciplina:"Ética Profissional",exame:"46º Exame (05/2026)",enunciado:"Frederico, advogado, decidiu unir sua atividade de advocacia a um empreendimento de construção civil, oferecendo aos clientes, no mesmo escritório, consultoria jurídica e serviços de incorporação imobiliária. Contratou uma campanha publicitária conjunta, ressaltando seu trabalho como advogado e como empreendedor. Com base no Estatuto da OAB, assinale a afirmativa correta.",alternativas:{a:"É possível a divulgação conjunta, desde que respeitados o decoro e a dignidade da advocacia, cabendo ao Tribunal de Ética avaliar a adequação.",b:"É permitida a divulgação conjunta quando a outra atividade também for regulamentada por entidade de classe.",c:"É vedada a divulgação conjunta de advocacia com outra atividade, ainda que exercida pela mesma pessoa e haja afinidade entre os ramos.",d:"Em regra não é possível, mas nesse caso seria permitido, pois há afinidade temática e a mesma pessoa exerce as duas atividades."},correta:"c",explicacao:"O Estatuto veda a divulgação conjunta da advocacia com outra atividade sem qualquer exceção ou ressalva, mesmo havendo afinidade entre os ramos ou identidade da pessoa que os exerce.",baseLegal:"Art. 1º, § 3º, da Lei 8.906/94 (EAOAB)"},
+{disciplina:"Ética Profissional",exame:"46º Exame (05/2026)",enunciado:"Abelardo foi contratado para representar Everardo em causa cível, combinando honorários de êxito consistentes em uma joia de elevado valor. Após ganhar a causa, Everardo teve todo o seu patrimônio bloqueado por suspeita de crimes financeiros. À luz do Estatuto e do Código de Ética, assinale a afirmativa correta.",alternativas:{a:"Abelardo poderá requerer ao juízo criminal o desbloqueio de até 20% dos bens para pagamento de honorários e custos com a defesa.",b:"Abelardo poderá participar dos bens particulares de Everardo, mesmo sem previsão nesse sentido, diante da impossibilidade de outro pagamento.",c:"A cláusula quota litis não é vedada, mas deve ser em pecúnia; havendo previsão de joia, Abelardo só terá direito aos honorários de sucumbência.",d:"A cláusula quota litis é vedada, cabendo arbitramento judicial dos honorários conforme o art. 85 do CPC."},correta:"a",explicacao:"Em caso de bloqueio universal de bens do cliente por decisão judicial, a lei garante ao advogado a liberação de até 20% do valor bloqueado para receber honorários e ser ressarcido de gastos com a defesa (com exceção de causas de tráfico de drogas).",baseLegal:"Art. 24-A do EAOAB"},
+{disciplina:"Ética Profissional",exame:"46º Exame (05/2026)",enunciado:"Paloma, advogada gestante, foi impedida de estacionar em vaga reservada e obrigada a passar por detector de metais no Fórum de uma comarca estadual, mesmo informando sua condição. Com base no Estatuto da OAB, assinale a afirmativa correta.",alternativas:{a:"Tem direito a não passar por detector de metais, mas a vaga reservada só é garantida em tribunais federais.",b:"Esses direitos só se aplicam em Tribunais Superiores, não em fóruns de comarcas estaduais.",c:"Tem direito a entrar sem ser submetida a detector de metais e à reserva de vaga em garagens de fóruns e tribunais.",d:"Tem direito de entrada sem detector de metais, mas a vaga reservada é mera liberalidade do tribunal."},correta:"c",explicacao:"O Estatuto não diferencia esfera federal ou estadual: os dois direitos da advogada gestante — entrada sem detector de metais e vaga reservada em garagens — valem em qualquer fórum ou tribunal do país.",baseLegal:"Art. 7º-A, I, 'a' e 'b', do EAOAB"},
+{disciplina:"Ética Profissional",exame:"46º Exame (05/2026)",enunciado:"Danilo, procurador de carreira, foi nomeado Procurador-Geral de sua instituição. Antes de assumir, patrocinava causas trabalhistas e tributárias contra empresas privadas. Com base nas incompatibilidades e impedimentos do Estatuto, assinale a afirmativa correta.",alternativas:{a:"Está impedido apenas nas causas contra a Fazenda Pública que o remunera, podendo seguir com as causas privadas.",b:"Poderá continuar patrocinando todas as causas, pois o cargo não gera incompatibilidade.",c:"Poderá continuar apenas com as causas tributárias, não as trabalhistas.",d:"Não poderá continuar patrocinando nenhuma das causas, pois o cargo obsta o exercício da advocacia desvinculada da função, durante a investidura."},correta:"d",explicacao:"Procuradores-Gerais e dirigentes de órgãos jurídicos da Administração Pública só podem exercer a advocacia vinculada à própria função que ocupam, enquanto durar a investidura no cargo.",baseLegal:"Art. 29 do EAOAB"},
+{disciplina:"Ética Profissional",exame:"46º Exame (05/2026)",enunciado:"Mateus contratou um agenciador para captar causas previdenciárias nas imediações do INSS, prometendo-lhe participação nos honorários. Após processo disciplinar, recebeu pena de censura. Considerando o Estatuto, assinale a afirmativa correta.",alternativas:{a:"Havendo atenuantes, a censura pode ser substituída por multa isolada.",b:"A sanção aplicada deverá constar dos assentamentos, com ampla publicidade nos meios oficiais.",c:"A gravidade da conduta impede a conversão da censura em advertência, mesmo sem punição disciplinar anterior.",d:"O exercício assíduo e proficiente de mandato ou cargo em órgão da OAB, se comprovado, deve ser considerado como atenuante na aplicação da sanção."},correta:"d",explicacao:"A lei prevê expressamente como circunstância atenuante o exercício assíduo e proficiente de mandato ou cargo em qualquer órgão da OAB pelo advogado processado.",baseLegal:"Art. 40, III, do EAOAB"},
+{disciplina:"Introdução ao Estudo do Direito",exame:"46º Exame (05/2026)",enunciado:"O STF aplicou a Lei de Greve do setor privado (Lei 7.783/1989) aos servidores públicos, diante da ausência de lei regulamentadora do direito de greve no setor público, por semelhança entre as situações. Assinale a opção que melhor explica a técnica utilizada.",alternativas:{a:"Costumes.",b:"Equidade.",c:"Analogia.",d:"Princípios Gerais de Direito."},correta:"c",explicacao:"Aplicar a um caso sem previsão legal a disciplina de outro caso semelhante já regulado é, por definição, o uso da analogia como técnica de integração do ordenamento.",baseLegal:"Art. 4º da LINDB"},
+{disciplina:"Introdução ao Estudo do Direito",exame:"46º Exame (05/2026)",enunciado:"Sócrates, ao ver soldados perseguirem um homem chamado de 'ladrão', pergunta: 'que você entende por ladrão?'. Segundo a distinção de Tercio Sampaio Ferraz Jr. entre questões zetéticas e dogmáticas, assinale a afirmativa correta.",alternativas:{a:"O enfoque de Sócrates é dogmático, pois questiona o conceito usado pelo soldado.",b:"A dúvida e o aspecto ontológico da conduta de Sócrates são típicos das questões zetéticas.",c:"Usar os conceitos de roubo e furto do Código Penal para descaracterizar a imputação é tipicamente zetético.",d:"O enfoque zetético deve ceder à função dogmática, por ser mais produtivo no mundo atual."},correta:"b",explicacao:"Questões zetéticas investigam o que uma coisa é (função especulativa, ligada ao 'ser'), enquanto questões dogmáticas visam decidir e agir (função diretiva, ligada ao 'dever-ser'). Ao questionar o próprio conceito de 'ladrão', Sócrates problematiza a essência do termo — enfoque zetético.",baseLegal:"Tercio Sampaio Ferraz Jr., Introdução ao Estudo do Direito"},
+{disciplina:"Direito Constitucional",exame:"46º Exame (05/2026)",enunciado:"Uma lei estadual foi declarada inconstitucional pelo STF em ADI. Meses depois, a Assembleia Legislativa aprovou nova lei com conteúdo idêntico. Sobre o cabimento de nova ADI contra essa lei, assinale a afirmativa correta.",alternativas:{a:"O Governador deve ingressar com reclamação no STF, pois a nova lei afronta o efeito vinculante da decisão anterior.",b:"O efeito vinculante da decisão anterior não alcança a atividade legislativa típica, sendo cabível nova ADI contra a nova lei.",c:"A nova lei não pode ser objeto de nova ADI, pois o efeito vinculante impede que qualquer legitimado a questione.",d:"Pode ser ajuizada nova ADI, pois o Legislativo está vinculado à decisão anterior mesmo em sua função de legislar."},correta:"b",explicacao:"O efeito vinculante das decisões do STF em ADI atinge os demais órgãos do Judiciário e a Administração Pública, mas não a atividade legislativa típica — por isso o Legislativo pode editar nova lei de conteúdo idêntico, sujeita a nova ADI.",baseLegal:"Art. 102, § 2º, da CF"},
+{disciplina:"Direito Constitucional",exame:"46º Exame (05/2026)",enunciado:"Prefeito, ao final do segundo mandato consecutivo, enviou projeto de lei de sua iniciativa propondo majorar os subsídios do futuro Prefeito e Vice-Prefeito. O projeto foi aprovado e sancionado. Sobre a compatibilidade constitucional dessa lei, assinale a afirmativa correta.",alternativas:{a:"A lei atende à ordem jurídica brasileira, que exige lei municipal para fixar o subsídio do Prefeito.",b:"A lei atende à ordem jurídica, desde que observe a Lei Orgânica do Município.",c:"Não sendo o Prefeito beneficiário direto, o processo legislativo converge com o sistema jurídico brasileiro.",d:"A lei não atende ao regime constitucional, pois a matéria exige projeto de iniciativa da Câmara Municipal, não do Executivo."},correta:"d",explicacao:"A fixação dos subsídios de Prefeito, Vice-Prefeito e Secretários é matéria de iniciativa privativa da Câmara Municipal — um projeto de iniciativa do próprio Executivo sobre esse tema é formalmente inconstitucional.",baseLegal:"Art. 29, V, da CF"},
+{disciplina:"Direito Constitucional",exame:"46º Exame (05/2026)",enunciado:"Maria descobriu que seu nome constava, erroneamente, em registro público estadual como devedora de impostos, e a Fazenda Estadual não corrigiu a informação apesar de pedidos. Sobre o remédio constitucional cabível, assinale a afirmativa correta.",alternativas:{a:"Cabe mandado de segurança, único remédio capaz de propiciar a retificação de dados.",b:"O objetivo deve ser buscado por processo judicial sigiloso, não sendo cabível o remédio sugerido.",c:"Cabe habeas data, mas sua impetração depende da representação por advogado com capacidade postulatória.",d:"O remédio não é adequado, pois se destina apenas a dar acesso a informações sobre a própria pessoa."},correta:"c",explicacao:"O habeas data serve tanto para conhecer informações sobre a própria pessoa quanto para retificar dados incorretos em bancos de dados de entidades governamentais ou de caráter público, exigindo representação por advogado para sua impetração.",baseLegal:"Art. 5º, LXXII, da CF"},
+{disciplina:"Direito Constitucional",exame:"46º Exame (05/2026)",enunciado:"Uma comunidade indígena sofre esbulho possessório em conflito que se arrasta desde antes de 1988. Segundo o entendimento do STF e da Corte Interamericana de Direitos Humanos, assinale a afirmativa correta.",alternativas:{a:"Qualquer integrante da comunidade pode pleitear individualmente, em substituição à coletividade, a tutela dos direitos violados.",b:"O fato de o conflito se estender a período anterior a 1988 não impede, por si só, o reconhecimento da tradicionalidade da ocupação, diante de renitente esbulho.",c:"É possível a alienação das terras indígenas por livre disposição da comunidade, desde que o valor seja revertido a ela.",d:"É obrigatório que a representação em juízo seja feita exclusivamente por órgão governamental como a Funai."},correta:"b",explicacao:"O STF relativizou a tese do 'marco temporal' de 1988: situações de esbulho renitente (posse tomada à força e mantida por não índios) não afastam o reconhecimento da ocupação tradicional indígena sobre a terra.",baseLegal:"Art. 231 da CF; Tema 1.031 de repercussão geral do STF"},
+{disciplina:"Direito Constitucional",exame:"46º Exame (05/2026)",enunciado:"Após a EC 45/2004, discutiu-se o status normativo dos tratados de direitos humanos já incorporados ao ordenamento antes da reforma. Segundo a jurisprudência atual do STF, assinale a afirmativa correta.",alternativas:{a:"Possuem status de lei ordinária.",b:"Possuem status de norma constitucional, por ausência de previsão expressa em sentido contrário.",c:"Possuem status de norma constitucional, com base na cláusula aberta do art. 5º, § 2º, da CF.",d:"Possuem status supralegal: estão acima das leis ordinárias, mas abaixo da Constituição."},correta:"d",explicacao:"O STF, a partir do julgamento do RE 466.343/SP, consolidou que tratados de direitos humanos incorporados antes da EC 45/2004 (sem o rito qualificado do art. 5º, §3º) têm status supralegal — superior à lei ordinária, mas sem equivaler a emenda constitucional.",baseLegal:"Art. 5º, § 3º, da CF; RE 466.343/SP"},
+{disciplina:"Direito Eleitoral",exame:"46º Exame (05/2026)",enunciado:"Após a diplomação de Maria como Prefeita, descobriu-se que ela recebera, sem repasse de dinheiro, publicidade estimável em valores feita a seu favor por uma organização da sociedade civil de interesse público. Sobre a orientação a ser dada, assinale a afirmativa correta.",alternativas:{a:"Trata-se de captação ilícita de recursos, cabendo ação de investigação judicial eleitoral.",b:"Como não houve repasse financeiro direto, não há ilícito eleitoral.",c:"Ocorreu a preclusão de qualquer medida, tornando irrelevante a análise da licitude.",d:"Só são vedadas doações expressas em moeda, cabendo apenas multa a Maria e à organização."},correta:"a",explicacao:"A lei eleitoral equipara doação em dinheiro à doação estimável em dinheiro (como publicidade), sendo vedada quando feita por organização da sociedade civil de interesse público; o instrumento adequado para apurar o abuso é a ação de investigação judicial eleitoral (AIJE).",baseLegal:"Art. 24 da Lei 9.504/97; art. 22 da LC 64/90"},
+{disciplina:"Direito Eleitoral",exame:"46º Exame (05/2026)",enunciado:"Maria pretende concorrer a senadora, tendo nascido no Estado Alfa mas com propriedades e vida profissional também nos Estados Beta e Gama. Sobre em qual Estado ela pode concorrer, assinale a afirmativa correta.",alternativas:{a:"Somente no Estado em que tiver domicílio eleitoral fixado com ao menos seis meses de antecedência da eleição.",b:"Deve definir o domicílio eleitoral apenas no momento do registro de candidatura.",c:"Pode concorrer em qualquer dos três Estados, dado o caráter nacional do cargo de senador.",d:"Somente no Estado onde passa a maior parte do tempo, ainda que declare domicílio diverso."},correta:"a",explicacao:"O domicílio eleitoral na circunscrição é condição de elegibilidade, devendo estar constituído com antecedência mínima de seis meses da eleição — mesmo para o cargo de senador, cuja disputa ocorre por circunscrição estadual.",baseLegal:"Art. 14, § 3º, IV, da CF; art. 9º da Lei 9.504/97"},
+{disciplina:"Direito Financeiro",exame:"46º Exame (05/2026)",enunciado:"Um Município com dificuldade de pagar salários de servidores solicitou empréstimo ao BNDES, oferecendo em garantia terrenos de valor superior ao empréstimo. Assinale a afirmativa correta.",alternativas:{a:"É proibido ao BNDES realizar empréstimo destinado ao pagamento de despesas com pessoal.",b:"Havendo garantia superior ao valor emprestado, o empréstimo deve ser realizado.",c:"É facultado ao BNDES realizar o empréstimo se considerar as garantias de liquidez satisfatória.",d:"Só uma instituição financeira controlada pelo próprio Estado poderia realizar esse empréstimo."},correta:"a",explicacao:"A Lei de Responsabilidade Fiscal veda operações de crédito destinadas a financiar despesas com pessoal, independentemente da suficiência das garantias oferecidas ou da natureza da instituição financeira envolvida.",baseLegal:"Art. 37 da LC 101/2000 (LRF)"},
+{disciplina:"Direito Financeiro",exame:"46º Exame (05/2026)",enunciado:"O Poder Executivo, ao elaborar o projeto de Lei Orçamentária Anual (LOA), inseriu previsões de despesa para exercícios seguintes, especificando investimentos plurianuais e em andamento. Assinale a afirmativa correta.",alternativas:{a:"A LOA não poderia conter tais investimentos, que só poderiam constar do Plano Plurianual.",b:"Os investimentos plurianuais deveriam constar apenas da Lei de Diretrizes Orçamentárias.",c:"O projeto se adequa às disposições constitucionais que permitem essa inserção na LOA.",d:"A LOA só poderia conter os investimentos já em andamento, não os plurianuais."},correta:"c",explicacao:"A LOA deve ser compatível com o PPA e a LDO, podendo perfeitamente refletir investimentos plurianuais e em andamento para viabilizar sua execução financeira no exercício.",baseLegal:"Art. 165, §§ 1º, 2º e 5º, da CF"},
+{disciplina:"Direito Tributário",exame:"46º Exame (05/2026)",enunciado:"Decreto presidencial reduziu a alíquota da CIDE-Combustíveis sobre o álcool etílico; meses depois, outro decreto restabeleceu a alíquota anterior, com efeitos a partir de determinada data. Assinale a afirmativa correta.",alternativas:{a:"Produzir efeitos antes de um ano viola o princípio da anterioridade tributária anual.",b:"A redução por decreto é inconstitucional, ainda que mais benéfica ao contribuinte.",c:"A redução e o posterior restabelecimento da alíquota podem ser feitos por decreto.",d:"O restabelecimento por decreto viola o princípio da legalidade tributária."},correta:"c",explicacao:"A Constituição excepciona expressamente a CIDE-Combustíveis da anterioridade anual e permite que sua alíquota seja reduzida e restabelecida por ato do Poder Executivo, sem necessidade de lei em sentido estrito.",baseLegal:"Art. 177, § 4º, I, 'b', da CF"},
+{disciplina:"Direito Tributário",exame:"46º Exame (05/2026)",enunciado:"Um Município criou, por lei, taxa de fiscalização de cemitérios, delegando a um decreto do Prefeito a fixação da data de pagamento. Assinale a afirmativa correta.",alternativas:{a:"Somente lei municipal poderia fixar o prazo de pagamento da taxa.",b:"O decreto não poderia fixar prazo de 15 dias, por contrariar prazo de 30 dias do CTN.",c:"Por se tratar de taxa de polícia, e não de serviço específico e divisível, o Município não poderia instituí-la.",d:"Mesmo sem previsão expressa na lei instituidora, o decreto seria apto a fixar a data de pagamento."},correta:"d",explicacao:"O prazo de pagamento não integra o núcleo da reserva legal tributária (que abrange fato gerador, alíquota, base de cálculo e sujeito passivo); é aspecto operacional que pode ser disciplinado por decreto, mesmo sem delegação expressa na lei.",baseLegal:"Art. 97 do CTN"},
+{disciplina:"Direito Tributário",exame:"46º Exame (05/2026)",enunciado:"A União criou, por lei ordinária publicada em 1º de setembro, nova contribuição de seguridade social cuja cobrança se iniciou já em 1º de novembro do mesmo ano. Assinale a afirmativa correta.",alternativas:{a:"É inconstitucional por violar a reserva de lei complementar e as anterioridades anual e nonagesimal.",b:"É inconstitucional por violar a reserva de lei complementar e a anterioridade nonagesimal, mas não a anual.",c:"Não há inconstitucionalidade, pois contribuições de seguridade social são exceção às duas anterioridades.",d:"A única inconstitucionalidade é a violação à reserva de lei complementar."},correta:"b",explicacao:"Contribuições de seguridade social não se submetem à anterioridade anual, mas devem respeitar os 90 dias da anterioridade nonagesimal; além disso, se instituem nova fonte de custeio fora das já previstas, exigem lei complementar, não ordinária.",baseLegal:"Art. 195, §§ 4º e 6º, da CF"},
+{disciplina:"Direito Tributário",exame:"46º Exame (05/2026)",enunciado:"João recebeu indenização por danos morais de sua empregadora, que reteve Imposto de Renda na fonte. A restituição foi negada na primeira instância administrativa. Assinale a afirmativa correta.",alternativas:{a:"Foi correta a retenção, por se tratar de verba equiparável a salário.",b:"João terá prazo máximo de dois anos para propor ação anulatória contra a decisão administrativa que negou a restituição.",c:"João só poderá pedir a restituição judicialmente após esgotar todas as instâncias administrativas.",d:"João só poderá recorrer à segunda instância administrativa mediante depósito prévio."},correta:"b",explicacao:"A indenização por dano moral tem natureza compensatória e não configura acréscimo patrimonial, não incidindo Imposto de Renda (Súmula 498 do STJ); e o prazo para anular judicialmente a decisão administrativa que nega a restituição é de dois anos.",baseLegal:"Art. 169 do CTN; Súmula 498/STJ"},
+{disciplina:"Direito Administrativo",exame:"46º Exame (05/2026)",enunciado:"Ação de improbidade administrativa foi ajuizada contra um agente público; suas preliminares de contestação foram rejeitadas em decisão interlocutória. Considerando a Lei 8.429/1992 e o CPC, assinale a afirmativa correta.",alternativas:{a:"Cabe apelação contra essa decisão.",b:"Cabe agravo de instrumento contra essa decisão.",c:"Não cabe recurso, mas é possível pedido de reconsideração.",d:"A decisão não é passível de impugnação por recurso ou reconsideração."},correta:"b",explicacao:"Por não pôr fim ao processo, a rejeição de preliminares é decisão interlocutória, impugnável por agravo de instrumento, aplicável subsidiariamente o CPC à ação de improbidade.",baseLegal:"Art. 1.015 do CPC"},
+{disciplina:"Direito Administrativo",exame:"46º Exame (05/2026)",enunciado:"Um órgão federal delegou parte de sua competência a outro órgão não subordinado hierarquicamente, especificando matérias, poderes, limites e duração. Considerando a Lei 9.784/1999, assinale a afirmativa correta.",alternativas:{a:"A competência para decidir recursos administrativos não pode ser objeto de delegação.",b:"O ato de delegação é irrevogável.",c:"A delegação só pode ser feita a órgão hierarquicamente subordinado.",d:"As decisões por delegação consideram-se editadas pela autoridade delegante."},correta:"a",explicacao:"A lei veda expressamente a delegação da competência para decidir recursos administrativos, ainda que outras competências possam ser delegadas mesmo a órgãos sem subordinação hierárquica.",baseLegal:"Art. 13, II, da Lei 9.784/99"},
+{disciplina:"Direito Administrativo",exame:"46º Exame (05/2026)",enunciado:"Uma empresa participará de licitação na modalidade concorrência sob a Lei 14.133/2021 e teme ser prejudicada no julgamento das propostas, fase anterior à habilitação. Sobre o recurso cabível e o momento de manifestá-lo, assinale a afirmativa correta.",alternativas:{a:"Não há possibilidade de recurso contra o julgamento das propostas.",b:"Só cabe recurso depois da habilitação, sendo necessário aguardar o prosseguimento do certame.",c:"Cabe pedido de reconsideração com efeito suspensivo automático sobre a fase de habilitação.",d:"A intenção de recorrer deve ser manifestada de imediato, mas o prazo para as razões só se inicia com a intimação ou lavratura da ata da fase de habilitação, por haver fase recursal única."},correta:"d",explicacao:"A nova Lei de Licitações concentra os recursos em fase única: a intenção de recorrer é manifestada logo após a decisão, mas o prazo de três dias úteis para apresentar as razões só começa a correr a partir da intimação ou ata da etapa seguinte.",baseLegal:"Art. 165 da Lei 14.133/2021"},
+{disciplina:"Direito Administrativo",exame:"46º Exame (05/2026)",enunciado:"O Conselho Diretor de uma agência reguladora realizou reunião deliberativa sobre documentos sigilosos e matérias administrativas, sem divulgação prévia da data nem gravação em meio eletrônico. Considerando a Lei 13.848/2019, assinale a afirmativa correta.",alternativas:{a:"A reunião deve ser anulada por falta de gravação em meio eletrônico.",b:"Não há irregularidade, pois a matéria discutida envolvia documentos sigilosos.",c:"A gravação não era obrigatória, mas a divulgação prévia da data era necessária.",d:"A anulação depende de a empresa provar prejuízo pela ausência de divulgação prévia."},correta:"b",explicacao:"A regra de publicidade e gravação das reuniões do Conselho Diretor cede quando a pauta envolve matéria sigilosa prevista em lei — hipótese que afasta, de uma só vez, a exigência de divulgação prévia e de gravação.",baseLegal:"Art. 8º da Lei 13.848/2019"},
+];
+
+/* ---------------------------------------------------------------
+   Estado da aplicação
+------------------------------------------------------------------*/
+let bank = SEED_QUESTIONS.map((q, i) => ({...q, _id: 'seed-' + i}));
+let activeDisciplines = new Set(); // vazio = todas
+let onlyUnanswered = false;
+let answeredIds = new Set();
+let sessionScore = { correct: 0, total: 0 };
+let queue = [];
+let cursor = 0;
+
+const el = (id) => document.getElementById(id);
+
+function disciplineList(){
+  return [...new Set(bank.map(q => q.disciplina))].sort();
+}
+
+function buildFilterChips(){
+  const list = el('discList');
+  list.innerHTML = '';
+  disciplineList().forEach(d => {
+    const li = document.createElement('li');
+    const chip = document.createElement('button');
+    chip.className = 'disc-chip' + (activeDisciplines.has(d) ? ' active' : '');
+    chip.textContent = d;
+    chip.onclick = () => {
+      if (activeDisciplines.has(d)) activeDisciplines.delete(d);
+      else activeDisciplines.add(d);
+      buildFilterChips();
+      buildQueue();
+      renderCurrent();
+    };
+    li.appendChild(chip);
+    list.appendChild(li);
+  });
+}
+
+function buildQueue(){
+  queue = bank.filter(q => {
+    if (activeDisciplines.size > 0 && !activeDisciplines.has(q.disciplina)) return false;
+    if (onlyUnanswered && answeredIds.has(q._id)) return false;
+    return true;
+  });
+  cursor = 0;
+}
+
+function shuffleQueue(){
+  for (let i = queue.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+  cursor = 0;
+  renderCurrent();
+}
+
+function updateStats(){
+  el('statTotal').textContent = bank.length;
+  el('statScore').textContent = sessionScore.total === 0
+    ? 'nenhuma resposta nesta sessão'
+    : `${sessionScore.correct} de ${sessionScore.total} corretas nesta sessão`;
+}
+
+function renderCurrent(){
+  updateStats();
+  const area = el('quizArea');
+  if (queue.length === 0){
+    area.innerHTML = `<div class="empty-state">
+      <h2>Nenhuma questão para estes filtros</h2>
+      <p>Tente marcar outra disciplina ou desmarcar "somente não respondidas".</p>
+    </div>`;
+    return;
+  }
+  if (cursor >= queue.length) cursor = 0;
+  const q = queue[cursor];
+  const alreadyAnswered = answeredIds.has(q._id);
+
+  area.innerHTML = `
+    <div class="card">
+      <div class="q-meta">
+        <span class="disc-name">${q.disciplina}</span>
+        <span>${q.exame || ''}</span>
+      </div>
+      <p class="enunciado">${q.enunciado}</p>
+      <ul class="alts" id="altsList"></ul>
+      <div class="feedback" id="feedback"></div>
+      <div class="card-actions">
+        <span class="progress"><b>${cursor + 1}</b> de ${queue.length}</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn ghost" id="prevBtn" ${cursor === 0 ? 'disabled' : ''}>Anterior</button>
+          <button class="btn" id="nextBtn">Próxima</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const altsList = el('altsList');
+  ['a','b','c','d'].forEach(letter => {
+    const li = document.createElement('li');
+    li.className = 'alt';
+    li.dataset.letter = letter;
+    li.innerHTML = `<span class="letter">${letter})</span><span>${q.alternativas[letter]}</span>`;
+    li.onclick = () => selectAnswer(q, letter);
+    altsList.appendChild(li);
+  });
+
+  el('prevBtn').onclick = () => { cursor = Math.max(0, cursor - 1); renderCurrent(); };
+  el('nextBtn').onclick = () => { cursor = (cursor + 1) % queue.length; renderCurrent(); };
+
+  if (alreadyAnswered){
+    revealAnswer(q, null, true);
+  }
+}
+
+function selectAnswer(q, letter){
+  if (answeredIds.has(q._id)) return; // já respondida
+  const isCorrect = letter === q.correta;
+  sessionScore.total++;
+  if (isCorrect) sessionScore.correct++;
+  answeredIds.add(q._id);
+  revealAnswer(q, letter, false);
+  updateStats();
+}
+
+function revealAnswer(q, chosenLetter, isReplay){
+  document.querySelectorAll('.alt').forEach(node => {
+    const letter = node.dataset.letter;
+    node.classList.add('disabled');
+    node.onclick = null;
+    if (letter === q.correta) node.classList.add('correct');
+    else if (letter === chosenLetter) node.classList.add('wrong');
+  });
+  const fb = el('feedback');
+  fb.classList.add('show');
+  const wasCorrect = isReplay ? true : chosenLetter === q.correta;
+  const verdictText = isReplay
+    ? `Resposta certa: ${q.correta.toUpperCase()}`
+    : (chosenLetter === q.correta ? 'Certa.' : `Errada — a certa é a ${q.correta.toUpperCase()}.`);
+  fb.innerHTML = `
+    <div class="verdict ${wasCorrect || chosenLetter === q.correta ? 'ok' : 'no'}">${verdictText}</div>
+    <div class="expl">${q.explicacao}</div>
+    <div class="base">${q.baseLegal || ''}</div>
+  `;
+}
+
+/* ---------------------------------------------------------------
+   Import / export
+------------------------------------------------------------------*/
+function showDataMsg(text, ok){
+  const m = el('dataMsg');
+  m.textContent = text;
+  m.className = 'data-msg ' + (ok ? 'ok' : 'err');
+}
+
+function validateQuestion(q){
+  return q && typeof q.enunciado === 'string' && q.alternativas &&
+    ['a','b','c','d'].every(l => typeof q.alternativas[l] === 'string') &&
+    ['a','b','c','d'].includes(q.correta);
+}
+
+const CSV_COLUMNS = ['disciplina','exame','enunciado','alt_a','alt_b','alt_c','alt_d','correta','explicacao','baseLegal'];
+
+/* Parser de CSV simples com suporte a campos entre aspas (vírgula, aspas
+   escapada "" e quebra de linha dentro do campo). Retorna array de arrays. */
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i], next = text[i + 1];
+    if (inQuotes){
+      if (c === '"' && next === '"'){ field += '"'; i++; }
+      else if (c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"'){ inQuotes = true; }
+      else if (c === ','){ row.push(field); field = ''; }
+      else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r'){ /* ignora */ }
+      else { field += c; }
+    }
+  }
+  if (field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(f => f.trim() !== ''));
+}
+
+function csvField(value){
+  const s = (value ?? '').toString();
+  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function stringifyCSV(questions){
+  const lines = [CSV_COLUMNS.join(',')];
+  questions.forEach(q => {
+    lines.push([
+      q.disciplina, q.exame, q.enunciado,
+      q.alternativas.a, q.alternativas.b, q.alternativas.c, q.alternativas.d,
+      q.correta, q.explicacao, q.baseLegal
+    ].map(csvField).join(','));
+  });
+  return lines.join('\n');
+}
+
+function csvRowsToQuestions(rows){
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const idx = name => header.indexOf(name);
+  const iDisc = idx('disciplina'), iExame = idx('exame'), iEnun = idx('enunciado'),
+        iA = idx('alt_a'), iB = idx('alt_b'), iC = idx('alt_c'), iD = idx('alt_d'),
+        iCorreta = idx('correta'), iExpl = idx('explicacao'), iBase = idx('baselegal');
+  if (iEnun === -1 || iA === -1 || iB === -1 || iC === -1 || iD === -1 || iCorreta === -1){
+    return { error: 'Cabeçalho do CSV não reconhecido. Confira as colunas exigidas.' };
+  }
+  const questions = [];
+  for (let r = 1; r < rows.length; r++){
+    const row = rows[r];
+    questions.push({
+      disciplina: (row[iDisc] || 'Sem disciplina').trim(),
+      exame: (row[iExame] || '').trim(),
+      enunciado: (row[iEnun] || '').trim(),
+      alternativas: { a: row[iA] || '', b: row[iB] || '', c: row[iC] || '', d: row[iD] || '' },
+      correta: (row[iCorreta] || '').trim().toLowerCase(),
+      explicacao: (row[iExpl] || '').trim(),
+      baseLegal: (row[iBase] || '').trim(),
+    });
+  }
+  return { questions };
+}
+
+function mergeImported(raw, sourceLabel){
+  const text = raw.trim();
+  if (!text){ showDataMsg('Cole ou envie dados antes de importar.', false); return; }
+
+  let arr;
+  const looksLikeJSON = text.startsWith('[') || text.startsWith('{');
+
+  if (looksLikeJSON){
+    try { arr = JSON.parse(text); } catch(e){
+      showDataMsg('JSON inválido: verifique a formatação do texto colado.', false);
+      return;
+    }
+    if (!Array.isArray(arr)){
+      showDataMsg('O JSON precisa ser uma lista [ ] de questões.', false);
+      return;
+    }
+  } else {
+    const rows = parseCSV(text);
+    if (rows.length < 2){
+      showDataMsg('CSV vazio ou sem linhas de dados além do cabeçalho.', false);
+      return;
+    }
+    const result = csvRowsToQuestions(rows);
+    if (result.error){ showDataMsg(result.error, false); return; }
+    arr = result.questions;
+  }
+
+  let added = 0, skipped = 0;
+  arr.forEach((q, i) => {
+    if (!validateQuestion(q)){ skipped++; return; }
+    bank.push({...q, disciplina: q.disciplina || 'Sem disciplina', _id: (sourceLabel || 'import') + '-' + Date.now() + '-' + i});
+    added++;
+  });
+  if (added > 0){
+    buildFilterChips();
+    buildQueue();
+    renderCurrent();
+  }
+  showDataMsg(`${added} questão(ões) importada(s)${skipped ? `, ${skipped} ignorada(s) por formato inválido` : ''}.`, added > 0);
+}
+
+el('importBtn').onclick = () => {
+  mergeImported(el('importBox').value, 'paste');
+};
+
+el('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => mergeImported(reader.result, 'file');
+  reader.readAsText(file);
+});
+
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+el('exportBtn').onclick = () => {
+  const exportable = bank.map(({_id, ...rest}) => rest);
+  downloadBlob(JSON.stringify(exportable, null, 2), 'banco-questoes-oab.json', 'application/json');
+};
+
+el('exportCsvBtn').onclick = () => {
+  downloadBlob(stringifyCSV(bank), 'banco-questoes-oab.csv', 'text/csv');
+};
+
+/* ---------------------------------------------------------------
+   Controles gerais
+------------------------------------------------------------------*/
+el('onlyUnanswered').addEventListener('change', (e) => {
+  onlyUnanswered = e.target.checked;
+  buildQueue();
+  renderCurrent();
+});
+el('shuffleBtn').onclick = shuffleQueue;
+el('resetSessionBtn').onclick = () => {
+  answeredIds = new Set();
+  sessionScore = { correct: 0, total: 0 };
+  buildQueue();
+  renderCurrent();
+};
+
+/* ---------------------------------------------------------------
+   Inicialização
+------------------------------------------------------------------*/
+buildFilterChips();
+buildQueue();
+renderCurrent();
+</script>
+</body>
+</html>
