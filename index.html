@@ -425,6 +425,28 @@
   }
   .mark-btn:hover{ border-color: var(--brass); color: var(--ink); }
   .mark-btn.on{ background: #F3E6C8; border-color: var(--brass); color: var(--brass-deep); font-weight: 600; }
+  /* ---------- classificação dos erros (A–D) ---------- */
+  .erro-box{ margin-top:16px; padding:14px 14px 12px; border:1px solid var(--wrong); border-left-width:4px; border-radius:var(--radius); background:#FAF3EE; }
+  .erro-title{ font-size:11.5px; letter-spacing:.6px; text-transform:uppercase; font-weight:700; color:var(--wrong); margin-bottom:4px; }
+  .erro-q{ font-family:var(--serif); font-size:15.5px; font-weight:600; margin-bottom:10px; }
+  .erro-opts{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .erro-opt{ display:flex; gap:10px; align-items:flex-start; text-align:left; font-family:var(--sans); padding:10px 12px; border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--paper-raised); color:var(--ink); cursor:pointer; }
+  .erro-opt:hover{ border-color:var(--ink); }
+  .erro-opt .cat-letter, .cad-row .cat-letter{ flex-shrink:0; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:13px; color:#fff; background:var(--cat, var(--ink-soft)); }
+  .erro-opt .cat-txt{ display:flex; flex-direction:column; font-size:13.5px; line-height:1.35; }
+  .erro-opt .cat-txt small{ color:var(--ink-soft); font-size:12px; margin-top:2px; }
+  .erro-opt.on{ border-color:var(--cat, var(--ink)); background:#fff; box-shadow:inset 0 0 0 1px var(--cat, var(--ink)); }
+  .cat-A{ --cat:#7A2F27; } .cat-B{ --cat:#8C6A34; } .cat-C{ --cat:#3F5A73; } .cat-D{ --cat:#5E6B45; }
+  .erro-status{ font-size:12.5px; color:var(--ink-soft); margin-top:8px; min-height:1.2em; }
+  .cad-bars{ margin:12px 0 6px; }
+  .cad-row{ display:flex; align-items:center; gap:10px; margin-bottom:7px; font-size:13px; }
+  .cad-row .cat-letter{ width:22px; height:22px; font-size:12px; }
+  .cad-row .cad-name{ width:160px; flex-shrink:0; }
+  .cad-row .cad-track{ flex:1; height:10px; background:#EFEAD8; border-radius:2px; overflow:hidden; }
+  .cad-row .cad-fill{ height:100%; background:var(--cat, var(--ink-faint)); }
+  .cad-row .cad-n{ width:74px; text-align:right; color:var(--ink-soft); flex-shrink:0; }
+  .cad-diag{ margin:14px 0; padding:12px 14px; background:#EFEAD8; border-radius:var(--radius); }
+  @media (max-width:560px){ .erro-opts{ grid-template-columns:1fr; } .cad-row .cad-name{ width:110px; } }
   details.notes{ margin-top: 16px; }
   details.notes summary{
     cursor: pointer;
@@ -906,6 +928,19 @@ let answers = {};             // _id -> alternativa marcada no modo estudo
 let marks = {};               // _id -> true (marcada para revisar)
 let notes = {};               // _id -> texto da anotação
 let simErrors = {};           // _id -> true (errada ou em branco em simulado)
+let errCats = {};             // _id -> 'A' | 'B' | 'C' | 'D' (caderno de erros)
+const CATS = {
+  A: {nome:'Falta de conhecimento', desc:'Não sabia o conteúdo jurídico'},
+  B: {nome:'Confusão',              desc:'Conhecia o conteúdo, mas confundiu conceitos'},
+  C: {nome:'Interpretação',         desc:'Não compreendeu corretamente o enunciado'},
+  D: {nome:'Desatenção',            desc:'Sabia responder, mas errou por distração'}
+};
+const CAT_DIAG = {
+  A: 'O ponto mais fraco é o conteúdo: priorize estudar e revisar a matéria (teoria, base legal e resumos) das disciplinas em que mais erra.',
+  B: 'Você conhece boa parte da matéria, mas troca conceitos parecidos: monte quadros comparativos e flashcards dos pares que costumam ser confundidos.',
+  C: 'O problema está na leitura da questão: treine sublinhar o comando (certa/errada, exceção, "somente") e resolver com atenção ao enunciado.',
+  D: 'Seus erros são evitáveis: desacelere, releia o comando e todas as alternativas antes de marcar e revise o que marcou ao final.'
+};
 let simHistory = [];          // [{date, n, correct, usedSec, byDisc:{disc:[c,t]}}]
 let simSession = null;        // simulado em andamento
 let simLast = null;           // último simulado entregue (para revisão)
@@ -928,7 +963,7 @@ function migrateImportedIntoSeeds(){
   importedQuestions = importedQuestions.filter(q => {
     const target = seedByText[normalizeText(q.enunciado)];
     if (!target) return true;
-    [answers, marks, notes, simErrors].forEach(map => {
+    [answers, marks, notes, simErrors, errCats].forEach(map => {
       if (map[q._id] !== undefined){
         if (map[target] === undefined) map[target] = map[q._id];
         delete map[q._id];
@@ -964,6 +999,11 @@ function cleanNotes(obj){
   if (obj && typeof obj === 'object') Object.entries(obj).forEach(([k, v]) => { if (typeof v === 'string' && v.trim()) out[k] = v; });
   return out;
 }
+function cleanCats(obj){
+  const out = {};
+  if (obj && typeof obj === 'object') Object.entries(obj).forEach(([k, v]) => { if (CATS[v]) out[k] = v; });
+  return out;
+}
 function cleanHistory(arr){
   return Array.isArray(arr) ? arr.filter(h => h && typeof h.n === 'number' && typeof h.correct === 'number' && h.date) : [];
 }
@@ -983,6 +1023,7 @@ function loadState(){
     marks = cleanFlagMap(data.marks);
     notes = cleanNotes(data.notes);
     simErrors = cleanFlagMap(data.simErrors);
+    errCats = cleanCats(data.errCats);
     simHistory = cleanHistory(data.simHistory);
     if (data.simSession && Array.isArray(data.simSession.ids)) simSession = data.simSession;
     if (data.simLast && Array.isArray(data.simLast.ids)) simLast = data.simLast;
@@ -994,7 +1035,7 @@ function loadState(){
 function saveState(){
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      imported: importedQuestions, answers, marks, notes, simErrors, simHistory, simSession, simLast
+      imported: importedQuestions, answers, marks, notes, simErrors, errCats, simHistory, simSession, simLast
     }));
   } catch(e){
     if (storageAvailable){
@@ -1008,7 +1049,7 @@ function updateStorageNote(){
   const note = el('storageNote');
   if (!note) return;
   note.textContent = storageAvailable
-    ? 'Suas respostas, marcações, anotações, simulados e questões importadas ficam salvos automaticamente neste navegador.'
+    ? 'Suas respostas, marcações, anotações, classificação dos erros, simulados e questões importadas ficam salvos automaticamente neste navegador.'
     : 'Atenção: este navegador não permitiu salvar dados (pode ser uma janela anônima). Nada será guardado ao fechar a página; baixe seu progresso antes de sair.';
 }
 
@@ -1206,6 +1247,38 @@ function selectAnswer(q, letter){
   updateStats();
 }
 
+function buildErroBox(q){
+  const box = document.createElement('div');
+  box.className = 'erro-box';
+  box.innerHTML = '<div class="erro-title">Caderno de erros</div><div class="erro-q">Por que você errou esta questão?</div>';
+  const opts = document.createElement('div');
+  opts.className = 'erro-opts';
+  const status = document.createElement('div');
+  status.className = 'erro-status';
+  const setStatus = () => {
+    const c = errCats[q._id];
+    status.textContent = c ? `Registrado: ${c} — ${CATS[c].nome}. Você pode alterar.` : 'Escolha uma categoria para registrar o erro.';
+  };
+  Object.keys(CATS).forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'erro-opt cat-' + c + (errCats[q._id] === c ? ' on' : '');
+    b.dataset.cat = c;
+    b.innerHTML = `<span class="cat-letter">${c}</span><span class="cat-txt">${escapeHTML(CATS[c].nome)}<small>${escapeHTML(CATS[c].desc)}</small></span>`;
+    b.onclick = () => {
+      errCats[q._id] = c;
+      saveState();
+      opts.querySelectorAll('.erro-opt').forEach(n => n.classList.toggle('on', n.dataset.cat === c));
+      setStatus();
+    };
+    opts.appendChild(b);
+  });
+  box.appendChild(opts);
+  box.appendChild(status);
+  setStatus();
+  return box;
+}
+
 function revealAnswer(q, isRevisit){
   const chosen = answers[q._id];
   document.querySelectorAll('#altsList .alt').forEach(node => {
@@ -1229,6 +1302,7 @@ function revealAnswer(q, isRevisit){
     <div class="expl">${escapeHTML(q.explicacao)}</div>
     <div class="base">${escapeHTML(q.baseLegal)}</div>
   `;
+  if (!ok) fb.appendChild(buildErroBox(q));
   el('redoBtn').hidden = false;
 }
 
@@ -1524,6 +1598,35 @@ function goStudy(filter, discipline){
   showView('study');
 }
 
+function renderErrCats(){
+  const items = bank.filter(q => isError(q) && errCats[q._id]);
+  const wrongNoCat = bank.filter(q => isError(q) && !errCats[q._id]).length;
+  if (items.length === 0){
+    return `<h3>Tipos de erro</h3><p style="font-size:13px;">Quando errar uma questão no modo estudo, classifique o erro (A, B, C ou D). Aqui aparecerá se o problema está no conteúdo, na interpretação ou na atenção.${wrongNoCat ? ` Você tem ${wrongNoCat} erro(s) ainda sem categoria.` : ''}</p>`;
+  }
+  const counts = {A:0,B:0,C:0,D:0};
+  const byDisc = {};
+  items.forEach(q => {
+    const c = errCats[q._id];
+    counts[c]++;
+    (byDisc[q.disciplina] = byDisc[q.disciplina] || {A:0,B:0,C:0,D:0,t:0})[c]++;
+    byDisc[q.disciplina].t++;
+  });
+  const max = Math.max(1, ...Object.values(counts));
+  const top = Object.keys(CATS).sort((a, b) => counts[b] - counts[a])[0];
+  const bars = Object.keys(CATS).map(c => `
+    <div class="cad-row cat-${c}"><span class="cat-letter">${c}</span><span class="cad-name">${escapeHTML(CATS[c].nome)}</span>
+      <span class="cad-track"><div class="cad-fill" style="width:${counts[c] / max * 100}%"></div></span>
+      <span class="cad-n">${counts[c]} (${Math.round(counts[c] / items.length * 100)}%)</span></div>`).join('');
+  const rows = Object.entries(byDisc).sort((a, b) => b[1].t - a[1].t).map(([d, v]) =>
+    `<tr><td>${escapeHTML(d)}</td><td class="num">${v.A}</td><td class="num">${v.B}</td><td class="num">${v.C}</td><td class="num">${v.D}</td><td class="num">${v.t}</td></tr>`).join('');
+  return `<h3>Tipos de erro</h3>
+    <div class="cad-bars">${bars}</div>
+    ${wrongNoCat ? `<p style="font-size:13px;">${wrongNoCat} erro(s) ainda sem categoria.</p>` : ''}
+    <div class="cad-diag"><b>Padrão predominante: ${top} — ${escapeHTML(CATS[top].nome)}.</b> ${escapeHTML(CAT_DIAG[top])}</div>
+    <div class="table-wrap"><table class="perf"><thead><tr><th>Disciplina</th><th class="num">A</th><th class="num">B</th><th class="num">C</th><th class="num">D</th><th class="num">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 function renderPerf(){
   updateStats();
   const stats = {};
@@ -1579,6 +1682,7 @@ function renderPerf(){
         <button class="btn ghost" data-go="marked">Marcadas (${markCount})</button>
         <button class="btn ghost" data-go="notes">Com anotações (${noteCount})</button>
       </div>
+      ${renderErrCats()}
       <h3>Por disciplina</h3>
       <p style="font-size:13px;">"Peso" é o número de questões da disciplina na prova. O percentual soma estudo e simulados; abaixo de 50% fica em vermelho, a partir de 70% em verde.</p>
       <div class="table-wrap"><table class="perf">
@@ -1731,6 +1835,8 @@ function mergeProgress(data){
   Object.keys(inA).forEach(k => { if (!answers[k]) answers[k] = inA[k]; });
   Object.assign(marks, cleanFlagMap(data.marks));
   Object.assign(simErrors, cleanFlagMap(data.simErrors));
+  const inC = cleanCats(data.errCats);
+  Object.keys(inC).forEach(k => { if (!errCats[k]) errCats[k] = inC[k]; });
   const inN = cleanNotes(data.notes);
   Object.keys(inN).forEach(k => { if (!notes[k]) notes[k] = inN[k]; });
   const seen = new Set(simHistory.map(h => h.date));
@@ -1825,7 +1931,7 @@ el('exportCsvBtn').onclick = () => {
 el('exportProgressBtn').onclick = () => {
   const data = {
     tipo: 'vade-progresso', versao: 1, exportadoEm: new Date().toISOString(),
-    answers, marks, notes, simErrors, simHistory,
+    answers, marks, notes, simErrors, errCats, simHistory,
     importadas: importedQuestions.map(({_id, ...rest}) => rest),
   };
   const stamp = new Date().toISOString().slice(0, 10);
@@ -1840,7 +1946,7 @@ el('clearImportedBtn').onclick = () => {
   if (!confirm(`Apagar as ${importedQuestions.length} questão(ões) importada(s) deste navegador? As ${seedBank.length} questões do banco inicial são mantidas.`)) return;
   const removed = new Set(importedQuestions.map(q => q._id));
   importedQuestions = [];
-  [answers, marks, notes, simErrors].forEach(map => Object.keys(map).forEach(id => { if (removed.has(id)) delete map[id]; }));
+  [answers, marks, notes, simErrors, errCats].forEach(map => Object.keys(map).forEach(id => { if (removed.has(id)) delete map[id]; }));
   rebuildBank();
   saveState();
   buildFilterChips();

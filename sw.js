@@ -1,5 +1,5 @@
 /* Vade — service worker. A versão muda a cada novo index.html, o que dispara a atualização. */
-const VERSION = 'vade-51e779cf87';
+const VERSION = 'vade-c918d7fc2e';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
               'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
 const FONTS = 'vade-fonts';
